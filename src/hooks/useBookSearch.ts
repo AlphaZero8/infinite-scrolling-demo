@@ -67,7 +67,8 @@ export function useBookSearch(query: string) {
     () => ({
       bookTitles,
       isLoading: apiStatus === 'loading',
-      isError: apiStatus === 'error'
+      isError: apiStatus === 'error',
+      isIdle: apiStatus === 'idle'
     }),
     [bookTitles, apiStatus]
   )
