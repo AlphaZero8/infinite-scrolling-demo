@@ -10,7 +10,7 @@ interface BookSearchResult {
   [searchResultProp: string]: any
 }
 
-export function useBookSearch(query: string) {
+export function useBookSearch(query: string, page: number) {
   const [bookTitles, setBookTitles] = useState<string[]>([])
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'error'>(
     'idle'
@@ -33,7 +33,7 @@ export function useBookSearch(query: string) {
 
       try {
         const res = await fetch(
-          `https://openlibrary.org/search.json?q=${query}`,
+          `https://openlibrary.org/search.json?q=${query}&page=${page}`,
           {
             signal: abortControllerRef.current.signal
           }
@@ -61,14 +61,15 @@ export function useBookSearch(query: string) {
 
     searchBooks()
     return () => abortControllerRef.current?.abort()
-  }, [query])
+  }, [query, page])
 
   return useMemo(
     () => ({
       bookTitles,
       isLoading: apiStatus === 'loading',
       isError: apiStatus === 'error',
-      isIdle: apiStatus === 'idle'
+      isIdle: apiStatus === 'idle',
+      hasMore: bookTitles.length > 0
     }),
     [bookTitles, apiStatus]
   )
