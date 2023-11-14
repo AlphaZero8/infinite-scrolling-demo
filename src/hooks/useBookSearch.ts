@@ -7,6 +7,8 @@ interface Doc {
 
 interface BookSearchResult {
   docs: Doc[]
+  numFound: number
+  start: number
   [searchResultProp: string]: any
 }
 
@@ -15,6 +17,7 @@ export function useBookSearch(query: string, page: number) {
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'error'>(
     'idle'
   )
+  const [hasMore, setHasMore] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -38,12 +41,13 @@ export function useBookSearch(query: string, page: number) {
             signal: abortControllerRef.current.signal
           }
         )
-        const json: BookSearchResult = await res.json()
+        const { docs, numFound, start }: BookSearchResult = await res.json()
 
+        setHasMore(numFound - start >= 100)
         setApiStatus('idle')
         const mergeBookTitles = (prevTitles: string[]) => [
           ...prevTitles,
-          ...json.docs.map((doc) => doc.title)
+          ...docs.map((doc) => doc.title)
         ]
 
         // Set only the unique titles
@@ -69,8 +73,8 @@ export function useBookSearch(query: string, page: number) {
       isLoading: apiStatus === 'loading',
       isError: apiStatus === 'error',
       isIdle: apiStatus === 'idle',
-      hasMore: bookTitles.length > 0
+      hasMore
     }),
-    [bookTitles, apiStatus]
+    [bookTitles, apiStatus, hasMore]
   )
 }
