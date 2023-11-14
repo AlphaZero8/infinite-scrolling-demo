@@ -19,6 +19,11 @@ export function useBookSearch(query: string) {
 
   useEffect(() => {
     async function searchBooks() {
+      if (!query) {
+        setBookTitles([])
+        setApiStatus('idle')
+        return
+      }
       // Abort the previous network request if any
       abortControllerRef.current?.abort()
 
