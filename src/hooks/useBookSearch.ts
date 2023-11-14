@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 interface Doc {
   title: string
@@ -15,15 +15,23 @@ export function useBookSearch(query: string) {
   const [apiStatus, setApiStatus] = useState<'idle' | 'loading' | 'error'>(
     'idle'
   )
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     async function searchBooks() {
+      // Abort the previous network request if any
+      abortControllerRef.current?.abort()
+
+      abortControllerRef.current = new AbortController()
       setBookTitles([])
       setApiStatus('loading')
 
       try {
         const res = await fetch(
-          `https://openlibrary.org/search.json?q=${query}`
+          `https://openlibrary.org/search.json?q=${query}`,
+          {
+            signal: abortControllerRef.current.signal
+          }
         )
         const json: BookSearchResult = await res.json()
 
@@ -36,12 +44,18 @@ export function useBookSearch(query: string) {
         // Set only the unique titles
         setBookTitles((prevTitles) => [...new Set(mergeBookTitles(prevTitles))])
       } catch (e) {
+        // Ignore the errors due to the request cancellation
+        if (e instanceof DOMException && e.name === 'AbortError') {
+          return
+        }
+
         setApiStatus('error')
         console.error('Something went wrong in fetching the books!', e)
       }
     }
 
     searchBooks()
+    return () => abortControllerRef.current?.abort()
   }, [query])
 
   return useMemo(
