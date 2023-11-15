@@ -14,7 +14,7 @@ function App() {
   return (
     <div className="App">
       <BookSearchBox query={query} onChange={handleInputChange} />
-      <BookList query={query} page={page} />
+      <BookList query={query} page={page} setPage={setPage} />
     </div>
   )
 }

@@ -21,9 +21,12 @@ export function useBookSearch(query: string, page: number) {
   const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
+    setBookTitles([])
+  }, [query])
+
+  useEffect(() => {
     async function searchBooks() {
       if (!query) {
-        setBookTitles([])
         setApiStatus('idle')
         return
       }
@@ -31,7 +34,6 @@ export function useBookSearch(query: string, page: number) {
       abortControllerRef.current?.abort()
 
       abortControllerRef.current = new AbortController()
-      setBookTitles([])
       setApiStatus('loading')
 
       try {
@@ -64,6 +66,7 @@ export function useBookSearch(query: string, page: number) {
     }
 
     searchBooks()
+
     return () => abortControllerRef.current?.abort()
   }, [query, page])
 
