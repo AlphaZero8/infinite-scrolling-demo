@@ -1,16 +1,23 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useOnScreen(element: Element | null) {
   const [isOnScreen, setIsOnScreen] = useState(false)
   const observerRef = useRef<IntersectionObserver | null>(null)
 
+  const cleanup = useCallback(() => {
+    observerRef.current?.disconnect()
+    observerRef.current = null
+  }, [])
+
+  useEffect(() => {
+    if (isOnScreen) {
+      cleanup()
+    }
+  }, [isOnScreen, cleanup])
+
   useEffect(() => {
     if (!element) {
       return
-    }
-
-    if (isOnScreen) {
-      observerRef.current?.disconnect()
     }
 
     observerRef.current = new IntersectionObserver(
@@ -24,8 +31,8 @@ export function useOnScreen(element: Element | null) {
 
     observerRef.current.observe(element)
 
-    return () => observerRef.current?.disconnect()
-  }, [element, isOnScreen])
+    return cleanup
+  }, [element, cleanup])
 
   return isOnScreen
 }
